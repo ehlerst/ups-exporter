@@ -42,6 +42,43 @@ This exporter is designed to run continuously on low-power, resource-constrained
 - **`upsc`** CLI utility installed locally.
 - **Rust Toolchain** (if compiling from source).
 
+### Installing and Configuring NUT
+
+On Debian/Ubuntu-based systems, you can install and configure NUT as follows:
+
+1. **Install NUT packages**:
+   ```bash
+   sudo apt update
+   sudo apt install nut nut-client
+   ```
+
+2. **Configure the driver for your USB UPS**:
+   Add the driver configuration to `/etc/nut/ups.conf`. For USB-based CyberPower or other USB HID UPS systems, use the `usbhid-ups` driver:
+   ```ini
+   [cyberpower]
+       driver = usbhid-ups
+       port = auto
+       desc = "Cyber Power System PR1500LCDRT2U"
+   ```
+
+3. **Configure the NUT mode**:
+   Edit `/etc/nut/nut.conf` and set the mode to `standalone`:
+   ```ini
+   MODE=standalone
+   ```
+
+4. **Start the services**:
+   ```bash
+   sudo upsdrvctl start
+   sudo systemctl restart nut-server nut-client
+   ```
+
+5. **Verify the installation**:
+   Test that `upsc` can fetch the metrics from the UPS:
+   ```bash
+   upsc cyberpower
+   ```
+
 ## Installation
 
 ### 1. Build from Source
