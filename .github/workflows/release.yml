@@ -16,9 +16,26 @@ jobs:
       fail-fast: false
       matrix:
         include:
+          # x86_64 targets
+          - target: x86_64-unknown-linux-gnu
+            os: ubuntu-latest
           - target: x86_64-unknown-linux-musl
             os: ubuntu-latest
+          
+          # ARMv6 (Raspberry Pi 1 / Pi Zero) targets
+          - target: arm-unknown-linux-gnueabihf
+            os: ubuntu-latest
           - target: arm-unknown-linux-musleabihf
+            os: ubuntu-latest
+          
+          # ARMv7 (Raspberry Pi 2 / 3 / 4 32-bit OS) targets
+          - target: armv7-unknown-linux-gnueabihf
+            os: ubuntu-latest
+          - target: armv7-unknown-linux-musleabihf
+            os: ubuntu-latest
+          
+          # ARMv8 / AArch64 (Raspberry Pi 3 / 4 / 5 64-bit OS, cloud servers) targets
+          - target: aarch64-unknown-linux-gnu
             os: ubuntu-latest
           - target: aarch64-unknown-linux-musl
             os: ubuntu-latest
