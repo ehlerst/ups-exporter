@@ -2,6 +2,13 @@
 
 A high-performance Prometheus and OpenTelemetry (OTLP) exporter for UPS (Uninterruptible Power Supply) devices, written in Rust. It queries UPS metrics using the local `upsc` utility and exposes them via a Prometheus scraper endpoint and/or pushes them periodically to an OpenTelemetry collector.
 
+## Design & Efficiency (Why Rust?)
+
+This exporter is designed to run continuously on low-power, resource-constrained edge hardware such as the Raspberry Pi Zero (ARMv6). Building the exporter in Rust provides significant benefits over traditional implementations:
+- **Minimal Resource Footprint**: Running as a daemon uses less than 5MB of RAM, making it extremely lightweight compared to Go or Python alternatives.
+- **Zero Runtime Dependencies**: When compiled with the MUSL target (`arm-unknown-linux-musleabihf`), the binary is statically linked and has no dependencies on external C libraries, meaning you can drop it onto any Linux distribution and it will run immediately.
+- **High Concurrency Performance**: The multi-threaded Prometheus listener and background OTLP push loops operate with zero overhead, ensuring that system resource consumption remains negligible.
+
 ## Features
 
 - **Dual Export:** Supports Prometheus scraping (`/metrics` endpoint) and periodic OpenTelemetry (OTLP HTTP JSON) metrics push.
