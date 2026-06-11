@@ -1,0 +1,13 @@
+[Unit]
+Description=UPS Exporter
+After=network.target
+
+[Service]
+EnvironmentFile=-/etc/default/ups-exporter
+ExecStart=/usr/local/bin/ups-exporter $UPS_EXPORTER_OPTS
+Restart=always
+User=root
+# Root or user with access to upsc is required to query UPS status
+
+[Install]
+WantedBy=multi-user.target

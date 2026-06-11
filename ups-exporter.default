@@ -1,0 +1,10 @@
+# /etc/default/ups-exporter
+
+# Port for Prometheus metrics
+# UPS_EXPORTER_OPTS="-prom-port 9102"
+
+# To enable OTLP metrics push as well, add the endpoint here:
+# UPS_EXPORTER_OPTS="-prom-port 9102 -otlp-endpoint http://prom.k.net:4318/v1/metrics"
+
+# Options to pass to the ups-exporter binary
+UPS_EXPORTER_OPTS="-prom-port 9102 -ups-name cyberpower -ups-label gamer -kwh-rate 0.15"
