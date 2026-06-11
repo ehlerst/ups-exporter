@@ -5,9 +5,11 @@ A high-performance Prometheus and OpenTelemetry (OTLP) exporter for UPS (Uninter
 ## Design & Efficiency (Why Rust?)
 
 This exporter is designed to run continuously on low-power, resource-constrained edge hardware such as the Raspberry Pi Zero (ARMv6). Building the exporter in Rust provides significant benefits over traditional implementations:
-- **Minimal Resource Footprint**: Running as a daemon uses less than 5MB of RAM, making it extremely lightweight compared to Go or Python alternatives.
+- **Minimal Resource Footprint**: Running as a daemon on a Raspberry Pi Zero, it consumes **only ~1.0 MB of RAM** (Resident Set Size / RSS) and has a systemd-reported memory usage of **84 KB**. Compare this to Go (~10-20MB) or Python (~15-30MB).
+- **Near-Zero CPU Usage**: The exporter uses **less than 0.2% CPU** on the single-core Broadcom BCM2835 processor (ARMv6) of a Raspberry Pi Zero, ensuring system resource consumption remains negligible.
 - **Zero Runtime Dependencies**: When compiled with the MUSL target (`arm-unknown-linux-musleabihf`), the binary is statically linked and has no dependencies on external C libraries, meaning you can drop it onto any Linux distribution and it will run immediately.
-- **High Concurrency Performance**: The multi-threaded Prometheus listener and background OTLP push loops operate with zero overhead, ensuring that system resource consumption remains negligible.
+- **Tiny Binary Size**: The compiled target release binary is only **~600 KiB** in size.
+- **High Concurrency Performance**: The multi-threaded Prometheus listener and background OTLP push loops operate with zero overhead.
 
 ## Features
 
