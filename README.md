@@ -11,6 +11,15 @@ This exporter is designed to run continuously on low-power, resource-constrained
 - **Tiny Binary Size**: The compiled target release binary is only **~600 KiB** in size.
 - **High Concurrency Performance**: The multi-threaded Prometheus listener and background OTLP push loops operate with zero overhead.
 
+### Architectural Trade-off: Spawning `upsc`
+
+Rather than implementing a native Network UPS Tools (NUT) TCP client protocol or writing a raw USB HID reader in Rust, this exporter delegates the USB communication and protocol parsing to the native, pre-installed `upsc` CLI utility.
+
+This architectural decision has significant advantages:
+- **Unmatched Memory Efficiency**: By delegating socket states and protocol buffers to the OS and `upsc`, our daemon does not need to keep connection pools or complex parsers in memory, allowing it to run in just **~1.0 MB of RAM**.
+- **Compact Binary Size**: We avoid importing massive networking frameworks or async runtimes, keeping the compiled static binary size under **600 KiB**.
+- **Guaranteed Driver Compatibility**: The official `upsc` client is maintained by the NUT community and handles vendor-specific USB HID quirks natively.
+
 ## Features
 
 - **Dual Export:** Supports Prometheus scraping (`/metrics` endpoint) and periodic OpenTelemetry (OTLP HTTP JSON) metrics push.
