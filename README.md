@@ -114,7 +114,7 @@ To modify options such as the Prometheus port, the target UPS name, the kWh rate
 1. Edit `/etc/default/ups-exporter`:
 ```bash
 # /etc/default/ups-exporter
-UPS_EXPORTER_OPTS="-prom-port 9102 -ups-name cyberpower -ups-label gamer -kwh-rate 0.15 -otlp-endpoint http://prom.k.net:4318/v1/metrics"
+UPS_EXPORTER_OPTS="-prom-port 9102 -ups-name cyberpower -ups-label gamer -kwh-rate 0.15 -otlp-endpoint http://localhost:4318/v1/metrics"
 ```
 
 2. Restart the service:
@@ -128,7 +128,7 @@ The following flags are available on the `ups-exporter` binary:
 
 - `-prom-port <port>`: Port for Prometheus metrics (default: `9102`)
 - `-enable-prom <true|false>`: Enable/disable Prometheus scraper endpoint (default: `true`)
-- `-otlp-endpoint <url>`: OTLP HTTP receiver endpoint (e.g. `http://prom.k.net:4318/v1/metrics`)
+- `-otlp-endpoint <url>`: OTLP HTTP receiver endpoint (e.g. `http://localhost:4318/v1/metrics`)
 - `-ups-name <name>`: Name of the UPS to query via upsc (default: `cyberpower`)
 - `-ups-label <label>`: Label name for the UPS device in metrics (default: `gamer`)
 - `-kwh-rate <rate>`: USD electricity rate per kWh (default: `0.15`)

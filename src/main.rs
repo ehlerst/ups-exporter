@@ -14,7 +14,7 @@ fn print_help() {
     println!("Options:");
     println!("  -prom-port <port>       Port for Prometheus metrics (default: 9102)");
     println!("  -enable-prom <true|false> Enable/disable Prometheus endpoint (default: true)");
-    println!("  -otlp-endpoint <url>    OTLP HTTP receiver endpoint (e.g. http://prom.k.net:4318/v1/metrics)");
+    println!("  -otlp-endpoint <url>    OTLP HTTP receiver endpoint (e.g. http://localhost:4318/v1/metrics)");
     println!("  -ups-name <name>        Name of the UPS to query via upsc (default: cyberpower)");
     println!("  -ups-label <label>      Label name for the UPS device in metrics (default: gamer)");
     println!("  -kwh-rate <rate>        USD electricity rate per kWh (default: 0.15)");
