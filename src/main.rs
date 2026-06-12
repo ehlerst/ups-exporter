@@ -102,7 +102,7 @@ fn generate_prometheus_metrics(metrics: &HashMap<String, String>, ups_label: &st
     // Calculated active power usage and financial cost metrics
     if let (Some(load_str), Some(nominal_str)) = (metrics.get("ups.load"), metrics.get("ups.realpower.nominal")) {
         if let (Ok(load), Ok(nominal)) = (load_str.parse::<f64>(), nominal_str.parse::<f64>()) {
-            if load > 0.0 && nominal > 0.0 {
+            if load >= 0.0 && nominal > 0.0 {
                 let active_power = (load / 100.0) * nominal; // Watts
                 
                 out.push_str("# HELP ups_power_active_watts Calculated active power usage of the load\n");
@@ -185,7 +185,7 @@ fn push_otlp_metrics(
     // Calculated active power usage and financial cost metrics
     if let (Some(load_str), Some(nominal_str)) = (metrics.get("ups.load"), metrics.get("ups.realpower.nominal")) {
         if let (Ok(load), Ok(nominal)) = (load_str.parse::<f64>(), nominal_str.parse::<f64>()) {
-            if load > 0.0 && nominal > 0.0 {
+            if load >= 0.0 && nominal > 0.0 {
                 let active_power = (load / 100.0) * nominal; // Watts
                 
                 otlp_metrics.push(json!({
