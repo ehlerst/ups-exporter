@@ -24,8 +24,9 @@ fn print_help() {
 }
 
 fn get_ups_metrics(ups_name: &str) -> Result<HashMap<String, String>, Box<dyn std::error::Error + Send + Sync>> {
+    let nut_addr = std::env::var("NUT_ADDR").unwrap_or_else(|_| "127.0.0.1:3493".to_string());
     let mut stream = TcpStream::connect_timeout(
-        &"127.0.0.1:3493".parse()?,
+        &nut_addr.parse()?,
         Duration::from_secs(5)
     )?;
     stream.set_read_timeout(Some(Duration::from_secs(5)))?;
@@ -531,5 +532,52 @@ mod tests {
         let out = generate_prometheus_metrics(&metrics, "gamer", 0.15);
         assert!(out.contains("ups_power_active_watts{ups=\"gamer\"} 0"));
         assert!(out.contains("ups_cost_hourly_USD{ups=\"gamer\"} 0"));
+    }
+
+    #[test]
+    fn test_get_ups_metrics_tcp_integration() {
+        use std::net::TcpListener;
+        
+        let listener = TcpListener::bind("127.0.0.1:0").unwrap();
+        let port = listener.local_addr().unwrap().port();
+        let test_addr = format!("127.0.0.1:{}", port);
+        
+        std::env::set_var("NUT_ADDR", &test_addr);
+        
+        let server_thread = thread::spawn(move || {
+            let (mut stream, _) = listener.accept().unwrap();
+            stream.set_read_timeout(Some(Duration::from_secs(2))).unwrap();
+            stream.set_write_timeout(Some(Duration::from_secs(2))).unwrap();
+
+            let mut reader = BufReader::new(&stream);
+            let mut line = String::new();
+            reader.read_line(&mut line).unwrap();
+            
+            assert_eq!(line, "LIST VAR cyberpower\n");
+            
+            let response = concat!(
+                "BEGIN LIST VAR cyberpower\n",
+                "VAR cyberpower battery.charge \"100\"\n",
+                "VAR cyberpower battery.runtime \"7125\"\n",
+                "VAR cyberpower battery.voltage \"27.4\"\n",
+                "VAR cyberpower ups.load \"8\"\n",
+                "VAR cyberpower ups.realpower.nominal \"810\"\n",
+                "END LIST VAR cyberpower\n"
+            );
+            stream.write_all(response.as_bytes()).unwrap();
+            stream.flush().unwrap();
+        });
+        
+        let metrics = get_ups_metrics("cyberpower").unwrap();
+        
+        server_thread.join().unwrap();
+        
+        assert_eq!(metrics.get("battery.charge").unwrap(), "100");
+        assert_eq!(metrics.get("battery.runtime").unwrap(), "7125");
+        assert_eq!(metrics.get("battery.voltage").unwrap(), "27.4");
+        assert_eq!(metrics.get("ups.load").unwrap(), "8");
+        assert_eq!(metrics.get("ups.realpower.nominal").unwrap(), "810");
+        
+        std::env::remove_var("NUT_ADDR");
     }
 }
