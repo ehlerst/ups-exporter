@@ -482,3 +482,54 @@ fn main() {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_generate_prometheus_metrics_empty() {
+        let metrics = HashMap::new();
+        let out = generate_prometheus_metrics(&metrics, "test-ups", 0.15);
+        assert!(out.is_empty());
+    }
+
+    #[test]
+    fn test_generate_prometheus_metrics_basic() {
+        let mut metrics = HashMap::new();
+        metrics.insert("battery.charge".to_string(), "95.5".to_string());
+        metrics.insert("battery.voltage".to_string(), "24.5".to_string());
+
+        let out = generate_prometheus_metrics(&metrics, "gamer", 0.15);
+        assert!(out.contains("ups_battery_charge_percent{ups=\"gamer\"} 95.5"));
+        assert!(out.contains("ups_battery_voltage_volts{ups=\"gamer\"} 24.5"));
+    }
+
+    #[test]
+    fn test_generate_prometheus_metrics_active_power_and_costs() {
+        let mut metrics = HashMap::new();
+        metrics.insert("ups.load".to_string(), "10".to_string()); // 10% load
+        metrics.insert("ups.realpower.nominal".to_string(), "1000".to_string()); // 1000W capacity
+
+        let out = generate_prometheus_metrics(&metrics, "gamer", 0.15);
+        // load * nominal = 0.10 * 1000 = 100W active power
+        assert!(out.contains("ups_power_active_watts{ups=\"gamer\"} 100"));
+        // 100W = 0.1 kW. Cost hourly = 0.1 * 0.15 = 0.015 USD
+        assert!(out.contains("ups_cost_hourly_USD{ups=\"gamer\"} 0.015"));
+        // Cost daily = 0.015 * 24 = 0.36 USD
+        assert!(out.contains("ups_cost_daily_USD{ups=\"gamer\"} 0.36"));
+        // Cost yearly = 0.36 * 365 = 131.4 USD
+        assert!(out.contains("ups_cost_yearly_USD{ups=\"gamer\"} 131.4"));
+    }
+
+    #[test]
+    fn test_generate_prometheus_metrics_zero_load() {
+        let mut metrics = HashMap::new();
+        metrics.insert("ups.load".to_string(), "0".to_string());
+        metrics.insert("ups.realpower.nominal".to_string(), "800".to_string());
+
+        let out = generate_prometheus_metrics(&metrics, "gamer", 0.15);
+        assert!(out.contains("ups_power_active_watts{ups=\"gamer\"} 0"));
+        assert!(out.contains("ups_cost_hourly_USD{ups=\"gamer\"} 0"));
+    }
+}
