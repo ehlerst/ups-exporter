@@ -1,10 +1,11 @@
 use std::collections::HashMap;
-use std::process::Command;
 use std::time::{SystemTime, UNIX_EPOCH};
 use serde_json::json;
 use std::net::TcpListener;
-use std::io::{Read, Write};
+use std::io::{Read, Write, BufReader, BufRead};
 use std::thread;
+use std::time::Duration;
+use std::net::TcpStream;
 
 fn print_help() {
     println!("UPS Exporter {}", env!("CARGO_PKG_VERSION"));
@@ -23,23 +24,48 @@ fn print_help() {
 }
 
 fn get_ups_metrics(ups_name: &str) -> Result<HashMap<String, String>, Box<dyn std::error::Error + Send + Sync>> {
-    let output = Command::new("upsc").arg(ups_name).output()?;
-    if !output.status.success() {
-        return Err(format!(
-            "upsc failed with exit code: {:?}, stderr: {}",
-            output.status.code(),
-            String::from_utf8_lossy(&output.stderr)
-        )
-        .into());
-    }
+    let mut stream = TcpStream::connect_timeout(
+        &"127.0.0.1:3493".parse()?,
+        Duration::from_secs(5)
+    )?;
+    stream.set_read_timeout(Some(Duration::from_secs(5)))?;
+    stream.set_write_timeout(Some(Duration::from_secs(5)))?;
 
-    let stdout = String::from_utf8_lossy(&output.stdout);
+    let command = format!("LIST VAR {}\n", ups_name);
+    stream.write_all(command.as_bytes())?;
+    stream.flush()?;
+
+    let reader = BufReader::new(stream);
     let mut metrics = HashMap::new();
-    for line in stdout.lines() {
-        if let Some((k, v)) = line.split_once(':') {
-            metrics.insert(k.trim().to_string(), v.trim().to_string());
+    let mut in_list = false;
+
+    for line in reader.lines() {
+        let line = line?;
+        if line.starts_with("BEGIN LIST VAR") {
+            in_list = true;
+            continue;
+        }
+        if line.starts_with("END LIST VAR") {
+            break;
+        }
+        if in_list && line.starts_with("VAR ") {
+            let parts: Vec<&str> = line.splitn(4, ' ').collect();
+            if parts.len() >= 4 {
+                let var_name = parts[2].to_string();
+                let mut var_value = parts[3].to_string();
+                if var_value.starts_with('"') && var_value.ends_with('"') {
+                    var_value.pop();
+                    var_value.remove(0);
+                }
+                metrics.insert(var_name, var_value);
+            }
         }
     }
+    
+    if metrics.is_empty() {
+        return Err("No metrics received from upsd".into());
+    }
+
     Ok(metrics)
 }
 
